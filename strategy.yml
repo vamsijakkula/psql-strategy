@@ -1,0 +1,49 @@
+# k8s-strategy-app-nodeport.yaml
+# This file defines the Kubernetes Deployment and Service for the Strategy Application.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: strategy-service
+  labels:
+    app: strategy-service
+spec:
+  replicas: 3 # Number of desired replicas for your application
+  selector:
+    matchLabels:
+      app: strategy-service
+  template:
+    metadata:
+      labels:
+        app: strategy-service
+    spec:
+      containers:
+      - name: strategy-service
+        image: vamsijakkula/strategy:v1 # Updated: Using the specified image name
+        imagePullPolicy: Always # Pull the image if it's not already present
+        ports:
+        - containerPort: 8080 # The port your Flask app listens on inside the container
+        env:
+        - name: FLASK_ENV
+          value: "production" # Set Flask environment to production
+        resources:
+          requests:
+            cpu: "100m" # Request 100 millicores of CPU
+            memory: "128Mi" # Request 128 MiB of memory
+          limits:
+            cpu: "500m" # Limit to 500 millicores of CPU
+            memory: "512Mi" # Limit to 512 MiB of memory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: strategy-service
+spec:
+  selector:
+    app: strategy-service
+  ports:
+    - protocol: TCP
+      port: 80 # The port exposed by the service (external to the cluster, or internal if ClusterIP)
+      targetPort: 8080 # The port on the container that the service forwards traffic to
+      nodePort: 30000 # Optional: Specify a specific NodePort (must be in range 30000-32767)
+  type: NodePort # Updated: Changed service type to NodePort to expose on worker nodes
